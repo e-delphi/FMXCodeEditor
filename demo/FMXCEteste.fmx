@@ -1,0 +1,80 @@
+object FMXCE: TFMXCE
+  Left = 0
+  Top = 0
+  Caption = 'Teste'
+  ClientHeight = 480
+  ClientWidth = 640
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object FMXCodeEditor1: TFMXCodeEditor
+    Font.Family = 'Cascadia Mono'
+    Font.Size = 14.000000000000000000
+    FontColor = claWhite
+    BackColor = xFF282923
+    CaretColor = claWhite
+    Code.Strings = (
+      '{'
+      '    "a": "teste",'
+      '    "b": 10,'
+      '    "c": true,'
+      '    "d": false,'
+      '    "e": null'
+      '}')
+    Syntax.Strings = (
+      '{'
+      '    "struct": "(.*)",'
+      '    "bool": "true|false|null",'
+      
+        '    "number": "-?(?=[1-9]|0(?!\\d))\\d+(\\.\\d+)?([eE][+-]?\\d+)' +
+        '?",'
+      
+        '    "text": "\"([^\"\\\\\\\\]*|\\\\\\\\[\"\\\\\\\\bfnrt\\/]|\\\\' +
+        '\\\\u[0-9a-f]{4})*\""'
+      '}')
+    Theme.Strings = (
+      '{'
+      '    "struct":'
+      '    {'
+      '        "color": "FFFFFFFF"'
+      '    },'
+      '    "bool":'
+      '    {'
+      '        "color": "FFAC80FF",'
+      '        "style": [1]'
+      '    },'
+      '    "number":'
+      '    {'
+      '        "color": "FFAC80FF"'
+      '    },'
+      '    "text":'
+      '    {'
+      '        "color": "FFE7DB74"'
+      '    }'
+      '}')
+    Size.Width = 281.000000000000000000
+    Size.Height = 177.000000000000000000
+    Size.PlatformDefault = False
+    Position.X = 88.000000000000000000
+    Position.Y = 80.000000000000000000
+  end
+  object FMXCodeEditor2: TFMXCodeEditor
+    Font.Family = 'Cascadia Mono'
+    FontColor = claBlack
+    BackColor = claWhite
+    CaretColor = claBlack
+    Code.Strings = (
+      'select * '
+      '  from tbl')
+    Syntax.Strings = (
+      '{}')
+    Theme.Strings = (
+      '{}')
+    Size.Width = 200.000000000000000000
+    Size.Height = 100.000000000000000000
+    Size.PlatformDefault = False
+    Position.X = 88.000000000000000000
+    Position.Y = 288.000000000000000000
+  end
+end

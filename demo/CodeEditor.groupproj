@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{5B97E118-43DA-4563-84E5-A4458030E539}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="..\src\FMXCodeEditor.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="teste.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="FMXCodeEditor">
+        <MSBuild Projects="..\src\FMXCodeEditor.dproj"/>
+    </Target>
+    <Target Name="FMXCodeEditor:Clean">
+        <MSBuild Projects="..\src\FMXCodeEditor.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMXCodeEditor:Make">
+        <MSBuild Projects="..\src\FMXCodeEditor.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="teste">
+        <MSBuild Projects="teste.dproj"/>
+    </Target>
+    <Target Name="teste:Clean">
+        <MSBuild Projects="teste.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="teste:Make">
+        <MSBuild Projects="teste.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="FMXCodeEditor;teste"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="FMXCodeEditor:Clean;teste:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="FMXCodeEditor:Make;teste:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
