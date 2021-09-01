@@ -32,7 +32,6 @@ type
     FCode: TStrings;
     FSyntax: TStrings;
     FTheme: TStrings;
-    FKeys: String;
     property CaretPos: Integer read FCaretPos write SetCaretPos;
     procedure Paint; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
@@ -150,45 +149,10 @@ begin
   if not Ready then
     Exit;
 
-  CalcExpression;
   CalcAttribute;
+  CalcExpression;
   CalcPainting;
   CalcCaret;
-end;
-
-procedure TFMXCodeEditor.CalcExpression;
-var
-  oJSON: TJSONObject;
-  I: Integer;
-  Item: TMatch;
-  oParte: TJSONObject;
-  aItems: TJSONArray;
-begin
-  oJSON := TJSONObject(TJSONObject.ParseJSONValue(FSyntax.Text));
-  try
-    if not Assigned(oJSON) then
-      Exit;
-
-    oParte := TJSONObject.Create;
-    try
-      for I := 0 to Pred(oJSON.Count) do
-      begin
-        aItems := TJSONArray.Create;
-        oParte.AddPair(oJSON.Pairs[I].JsonString.Value, aItems);
-
-        for Item in TRegEx.Matches(FCode.Text, oJSON.Pairs[I].JsonValue.Value, []) do
-          if Item.Length > 0 then
-            aItems
-              .Add(Pred(Item.Index))
-              .Add(Item.Length);
-      end;
-      FKeys := oParte.Format;
-    finally
-      oParte.DisposeOf;
-    end;
-  finally
-    oJSON.DisposeOf;
-  end;
 end;
 
 procedure TFMXCodeEditor.CalcAttribute;
@@ -196,14 +160,10 @@ var
   oJSON: TJSONObject;
   oItem: TJSONValue;
   vItem: TJSONValue;
-  aItem: TJSONArray;
   Attib: TInternalAttribute;
-  bFind: Boolean;
-  Part: TInternalPart;
-  I, J: Integer;
+  I: Integer;
 begin
   FAttributes.Clear;
-  FParts.Clear;
   oJSON := TJSONObject(TJSONObject.ParseJSONValue(FTheme.Text));
   try
     if not Assigned(oJSON) then
@@ -242,43 +202,48 @@ begin
   finally
     oJSON.DisposeOf;
   end;
+end;
 
-  oJSON := TJSONObject(TJSONObject.ParseJSONValue(FKeys));
+procedure TFMXCodeEditor.CalcExpression;
+var
+  oJSON: TJSONObject;
+  I: Integer;
+  Item: TMatch;
+  Part: TInternalPart;
+  Attib: TInternalAttribute;
+  bFind: Boolean;
+begin
+  FParts.Clear;
+  oJSON := TJSONObject(TJSONObject.ParseJSONValue(FSyntax.Text));
   try
     if not Assigned(oJSON) then
       Exit;
 
-    Part := nil;
     for I := 0 to Pred(oJSON.Count) do
     begin
-      aItem := TJSONArray(oJSON.Pairs[I].JsonValue);
-
-      Attib := nil;
-      bFind := False;
-      for Attib in FAttributes do
+      for Item in TRegEx.Matches(FCode.Text, oJSON.Pairs[I].JsonValue.Value, []) do
       begin
-        if Attib.ID = oJSON.Pairs[I].JsonString.Value then
-        begin
-          bFind := True;
-          Break;
-        end;
-      end;
-      if not bFind then
-        Continue;
+        if Item.Length <= 0 then
+          Continue;
 
-      for J := 0 to Pred(aItem.Count) do
-      begin
-        if not Odd(J) then
+        Attib := nil;
+        bFind := False;
+        for Attib in FAttributes do
         begin
-          Part := TInternalPart.Create;
-          Part.Start := TJSONNumber(aItem.Items[J]).AsInt;
-        end
-        else
-        begin
-          Part.Lenght := TJSONNumber(aItem.Items[J]).AsInt;
-          Part.Attribute := Attib;
-          FParts.Add(Part)
+          if Attib.ID = oJSON.Pairs[I].JsonString.Value then
+          begin
+            bFind := True;
+            Break;
+          end;
         end;
+        if not bFind then
+          Continue;
+
+        Part := TInternalPart.Create;
+        Part.Start := Pred(Item.Index);
+        Part.Lenght := Item.Length;
+        Part.Attribute := Attib;
+        FParts.Add(Part);
       end;
     end;
   finally
