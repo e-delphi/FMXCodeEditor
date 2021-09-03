@@ -32,6 +32,9 @@ type
     FCode: TStrings;
     FSyntax: TStrings;
     FTheme: TStrings;
+    FAutoSize: Boolean;
+    FLineCount: Integer;
+    FLineHeight: Single;
     property CaretPos: Integer read FCaretPos write SetCaretPos;
     procedure Paint; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
@@ -43,6 +46,7 @@ type
     procedure CalcAttribute;
     procedure CalcPainting;
     procedure CalcCaret;
+    procedure CalcSize;
     function GetCode: TStrings;
     function GetSyntax: TStrings;
     function GetTheme: TStrings;
@@ -54,9 +58,13 @@ type
     procedure SetFont(const Value: TFont);
     function Ready: Boolean;
     procedure SetCaretColor(const Value: TAlphaColor);
+    procedure SetAutoSize(const Value: Boolean);
+    procedure CalcLine;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    property LineCount: Integer read FLineCount;
+    property LineHeight: Single read FLineHeight;
   published
     property Font: TFont read GetFont write SetFont stored True;
     property FontColor: TAlphaColor read FFontColor write FFontColor stored True;
@@ -65,6 +73,7 @@ type
     property Code: TStrings read GetCode write SetCode stored True;
     property Syntax: TStrings read GetSyntax write SetSyntax stored True;
     property Theme: TStrings read GetTheme write SetTheme stored True;
+    property AutoSize: Boolean read FAutoSize write SetAutoSize stored False;
     property Align;
     property Anchors;
     property Width;
@@ -81,7 +90,8 @@ uses
   System.Types,
   System.SysUtils,
   System.JSON,
-  System.RegularExpressions;
+  System.RegularExpressions,
+  System.Math;
 
 constructor TFMXCodeEditor.Create(AOwner: TComponent);
 begin
@@ -139,9 +149,12 @@ end;
 
 function TFMXCodeEditor.Ready: Boolean;
 begin
-  Result := Assigned(FFont) and Assigned(FCode) and
-            Assigned(FSyntax) and Assigned(FTheme) and
-            not (FCode.Text.IsEmpty or FSyntax.Text.IsEmpty or FTheme.Text.IsEmpty);
+  Result :=
+    Assigned(FFont) and
+    Assigned(FCode) and
+    Assigned(FSyntax) and
+    Assigned(FTheme) and
+    not (FCode.Text.IsEmpty or FSyntax.Text.IsEmpty or FTheme.Text.IsEmpty);
 end;
 
 procedure TFMXCodeEditor.ItemOnChange(Sender: TObject);
@@ -152,7 +165,9 @@ begin
   CalcAttribute;
   CalcExpression;
   CalcPainting;
+  CalcLine;
   CalcCaret;
+  CalcSize;
 end;
 
 procedure TFMXCodeEditor.CalcAttribute;
@@ -269,13 +284,29 @@ begin
   Repaint;
 end;
 
+procedure TFMXCodeEditor.CalcLine;
+begin
+  FLineCount  := Length(FLayout.Text.Split([sLineBreak]));
+  FLineHeight := FLayout.TextHeight / FLineCount;
+end;
+
 procedure TFMXCodeEditor.CalcCaret;
 var
   H: Single;
 begin
-  H := FLayout.TextHeight / Length(FLayout.Text.Split([sLineBreak]));
+  H := FLineHeight;
   H := H + (H * 0.2);
-  FCaret.Size := TSizeF.Create(1, H);
+  if FCaret.Size.Height <> H then
+    FCaret.Size := TSizeF.Create(1, H);
+end;
+
+procedure TFMXCodeEditor.CalcSize;
+begin
+  if FAutoSize then
+  begin
+    Self.Width := FLayout.TextWidth;
+    Self.Height := FLayout.TextHeight;
+  end;
 end;
 
 procedure TFMXCodeEditor.Paint;
@@ -308,6 +339,10 @@ procedure TFMXCodeEditor.KeyDown(var Key: Word; var KeyChar: WideChar; Shift: TS
 var
   sBegin: String;
   sEnd: String;
+  iPosAtual: Integer;
+  iPosAnterior: Integer;
+  iPosProximo: Integer;
+  I: Integer;
 begin
   inherited;
 
@@ -324,6 +359,46 @@ begin
   case Key of
     vkRight: CaretPos := CaretPos + 1;
     vkLeft: CaretPos := CaretPos - 1;
+    vkUp:
+    begin
+      iPosAtual := 0;
+      for I := Length(sBegin) downto 1 do
+      begin
+        Inc(iPosAtual);
+        if sBegin[I] = #13 then
+          Break;
+      end;
+      
+      iPosAnterior := 0;
+      for I := Length(sBegin) - iPosAtual downto 1 do
+      begin
+        Inc(iPosAnterior);
+        if sBegin[I] = #13 then
+          Break;
+      end;
+      
+      CaretPos := (CaretPos - iPosAtual) - (iPosAnterior - iPosAtual);
+    end;
+    vkDown:
+    begin    
+      iPosAtual := 0;
+      for I := Length(sBegin) downto 1 do
+      begin
+        Inc(iPosAtual);
+        if sBegin[I] = #13 then
+          Break;
+      end;
+      
+      iPosProximo := 0;
+      for I := 1 to Length(sEnd) do
+      begin
+        Inc(iPosProximo);
+        if sEnd[I] = #13 then
+          Break;
+      end;
+      
+      CaretPos := CaretPos + iPosProximo + iPosAtual - 1;
+    end;
     vkBack:
     begin
       FCode.Text := Copy(sBegin, 1, Length(sBegin) - 1) + sEnd;
@@ -394,8 +469,6 @@ end;
 
 procedure TFMXCodeEditor.SetCaretPos(const Value: Integer);
 var
-  iLineCount: Integer;
-  iLineHeight: Single;
   sPart: String;
   aParts: TArray<String>;
   iRow: Integer;
@@ -404,23 +477,26 @@ var
 begin
   FCaretPos := Value;
 
-  iLineCount  := Length(FLayout.Text.Split([sLineBreak]));
-  iLineHeight := FLayout.TextHeight / iLineCount;
-
   sPart  := Copy(FLayout.Text, 0, CaretPos);
   aParts := sPart.Split([sLineBreak]);
   iRow   := Length(aParts) - 1;
 
   iCaretPosX := 0;
   if sPart.IsEmpty then
-    iRow := iLineCount - 1
+    iRow := LineCount - 1
   else
   begin
     regPos := FLayout.RegionForRange(TTextRange.Create(Length(sPart) - Length(aParts[iRow]), Length(aParts[iRow])));
     iCaretPosX := regPos[0].Width;
   end;
 
-  FCaret.Pos := TPointF.Create(iCaretPosX, iRow * iLineHeight);
+  FCaret.Pos := TPointF.Create(iCaretPosX, iRow * LineHeight);
+end;
+
+procedure TFMXCodeEditor.SetAutoSize(const Value: Boolean);
+begin
+  FAutoSize := Value;
+  CalcSize;
 end;
 
 end.

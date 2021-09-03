@@ -7,7 +7,7 @@
             <Dependencies/>
         </Projects>
         <Projects Include="teste.dproj">
-            <Dependencies/>
+            <Dependencies>..\src\FMXCodeEditor.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -26,13 +26,13 @@
     <Target Name="FMXCodeEditor:Make">
         <MSBuild Projects="..\src\FMXCodeEditor.dproj" Targets="Make"/>
     </Target>
-    <Target Name="teste">
+    <Target Name="teste" DependsOnTargets="FMXCodeEditor">
         <MSBuild Projects="teste.dproj"/>
     </Target>
-    <Target Name="teste:Clean">
+    <Target Name="teste:Clean" DependsOnTargets="FMXCodeEditor:Clean">
         <MSBuild Projects="teste.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="teste:Make">
+    <Target Name="teste:Make" DependsOnTargets="FMXCodeEditor:Make">
         <MSBuild Projects="teste.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
