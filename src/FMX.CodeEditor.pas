@@ -91,7 +91,8 @@ uses
   System.SysUtils,
   System.JSON,
   System.RegularExpressions,
-  System.Math;
+  System.Math,
+  System.StrUtils;
 
 constructor TFMXCodeEditor.Create(AOwner: TComponent);
 begin
@@ -357,8 +358,33 @@ begin
   end
   else
   case Key of
-    vkRight: CaretPos := CaretPos + 1;
-    vkLeft: CaretPos := CaretPos - 1;
+    vkBack:
+    begin
+      FCode.Text := Copy(sBegin, 1, Length(sBegin) - 1) + sEnd;
+      CaretPos := CaretPos - 1;
+    end;
+    vkDelete:
+    begin
+      FCode.Text := sBegin + Copy(sEnd, 2);
+    end;
+    vkReturn:
+    begin
+      FCode.Text := sBegin + sLineBreak + sEnd;
+    end;
+    vkRight:
+    begin
+      if LeftStr(sEnd, 1) = #13 then
+        CaretPos := CaretPos + 2
+      else
+        CaretPos := CaretPos + 1;
+    end;
+    vkLeft:
+    begin
+      if RightStr(sBegin, 1) = #10 then
+        CaretPos := CaretPos - 2
+      else
+        CaretPos := CaretPos - 1;
+    end;
     vkUp:
     begin
       iPosAtual := 0;
@@ -398,15 +424,6 @@ begin
       end;
       
       CaretPos := CaretPos + iPosProximo + iPosAtual - 1;
-    end;
-    vkBack:
-    begin
-      FCode.Text := Copy(sBegin, 1, Length(sBegin) - 1) + sEnd;
-      CaretPos := CaretPos - 1;
-    end;
-    vkReturn:
-    begin
-      FCode.Text := sBegin + sLineBreak + sEnd;
     end;
   end;
 end;
