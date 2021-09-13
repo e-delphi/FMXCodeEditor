@@ -9,7 +9,7 @@ uses
 
 type
   TInternalPart = class
-  strict private
+  private
     FStart: Integer;
     FLenght: Integer;
     FAttribute: TInternalAttribute;

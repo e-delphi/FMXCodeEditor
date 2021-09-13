@@ -36,6 +36,8 @@ contains
   FMX.CodeEditor.Install in 'FMX.CodeEditor.Install.pas',
   FMX.CodeEditor in 'FMX.CodeEditor.pas',
   FMX.CodeEditor.Attribute in 'FMX.CodeEditor.Attribute.pas',
-  FMX.CodeEditor.Part in 'FMX.CodeEditor.Part.pas';
+  FMX.CodeEditor.Part in 'FMX.CodeEditor.Part.pas',
+  FMX.CodeEditor.Selection in 'FMX.CodeEditor.Selection.pas',
+  FMX.CodeEditor.Caret in 'FMX.CodeEditor.Caret.pas';
 
 end.

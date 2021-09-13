@@ -10,7 +10,7 @@ uses
 
 type
   TInternalAttribute = class
-  strict private
+  private
     FID: String;
     FFont: TFont;
     FColor: TAlphaColor;

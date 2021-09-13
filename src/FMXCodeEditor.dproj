@@ -128,6 +128,8 @@
         <DCCReference Include="FMX.CodeEditor.pas"/>
         <DCCReference Include="FMX.CodeEditor.Attribute.pas"/>
         <DCCReference Include="FMX.CodeEditor.Part.pas"/>
+        <DCCReference Include="FMX.CodeEditor.Selection.pas"/>
+        <DCCReference Include="FMX.CodeEditor.Caret.pas"/>
         <RcItem Include="FMXCodeEditor.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>TFMXCodeEditor</ResourceId>

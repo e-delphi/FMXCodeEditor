@@ -13,7 +13,9 @@ uses
   FMX.Graphics,
   FMX.Objects,
   FMX.CodeEditor.Part,
-  FMX.CodeEditor.Attribute;
+  FMX.CodeEditor.Attribute,
+  FMX.CodeEditor.Caret,
+  FMX.CodeEditor.Selection;
 
 type
   TFMXCodeEditor = class(TControl)
@@ -25,7 +27,7 @@ type
     FBackColor: TAlphaColor;
     FCaretColor: TAlphaColor;
     FLayout: TTextLayout;
-    FCaret: TCaret;
+    FCaret: TInternalCaret;
     FAttributes: TObjectList<TInternalAttribute>;
     FParts: TObjectList<TInternalPart>;
     FCaretPos: Integer;
@@ -35,6 +37,7 @@ type
     FAutoSize: Boolean;
     FLineCount: Integer;
     FLineHeight: Single;
+    FSelection: TInternalSelection;
     property CaretPos: Integer read FCaretPos write SetCaretPos;
     procedure Paint; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
@@ -60,6 +63,7 @@ type
     procedure SetCaretColor(const Value: TAlphaColor);
     procedure SetAutoSize(const Value: Boolean);
     procedure CalcLine;
+    procedure Selection;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -112,11 +116,9 @@ begin
   FLayout     := TTextLayoutManager.DefaultTextLayout.Create;
   FAttributes := TObjectList<TInternalAttribute>.Create;
   FParts      := TObjectList<TInternalPart>.Create;
+  FSelection  := TInternalSelection.Create;
 
-  FCaret         := TCaret.Create(Self);
-  FCaret.Width   := 1;
-  FCaret.Pos     := TPointF.Create(0, 0);
-  FCaret.Visible := True;
+  FCaret  := TInternalCaret.Create(Self);
 
   FCode   := TStringList.Create;
   FSyntax := TStringList.Create;
@@ -140,6 +142,7 @@ begin
   FLayout.DisposeOf;
   FAttributes.DisposeOf;
   FParts.DisposeOf;
+  FSelection.DisposeOf;
   FFont.DisposeOf;
   FCode.DisposeOf;
   FSyntax.DisposeOf;
@@ -292,13 +295,8 @@ begin
 end;
 
 procedure TFMXCodeEditor.CalcCaret;
-var
-  H: Single;
 begin
-  H := FLineHeight;
-  H := H + (H * 0.2);
-  if FCaret.Size.Height <> H then
-    FCaret.Size := TSizeF.Create(1, H);
+  FCaret.Resize(FLineHeight);
 end;
 
 procedure TFMXCodeEditor.CalcSize;
@@ -308,6 +306,19 @@ begin
     Self.Width := FLayout.TextWidth;
     Self.Height := FLayout.TextHeight;
   end;
+end;
+
+procedure TFMXCodeEditor.Selection;
+var
+  r: TRectF;
+begin
+
+  // Desenvolver desenho da seleção
+//  FSelection.
+
+//  r := TRectF.Create(0,0,18,18);
+//  Canvas.Fill.Color := TAlphaColorRec.Gray;
+//  Canvas.FillRect(r, 1, 1, [TCorner.TopLeft, TCorner.TopRight, TCorner.BottomLeft, TCorner.BottomRight], 0.6);
 end;
 
 procedure TFMXCodeEditor.Paint;
@@ -321,6 +332,8 @@ begin
 
     // Texto
     FLayout.RenderLayout(Canvas);
+
+    Selection;
   finally
     Canvas.EndScene;
   end;
@@ -507,7 +520,8 @@ begin
     iCaretPosX := regPos[0].Width;
   end;
 
-  FCaret.Pos := TPointF.Create(iCaretPosX, iRow * LineHeight);
+  FCaret.X := iCaretPosX;
+  FCaret.Y := iRow * LineHeight
 end;
 
 procedure TFMXCodeEditor.SetAutoSize(const Value: Boolean);
