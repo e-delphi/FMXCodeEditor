@@ -373,12 +373,23 @@ begin
   case Key of
     vkBack:
     begin
-      FCode.Text := Copy(sBegin, 1, Length(sBegin) - 1) + sEnd;
-      CaretPos := CaretPos - 1;
+      if (Length(sBegin) > 2) and sBegin.EndsWith(sLineBreak) then
+      begin
+        FCode.Text := Copy(sBegin, 1, Length(sBegin) - 2) + sEnd;
+        CaretPos := CaretPos - 2;
+      end
+      else
+      begin
+        FCode.Text := Copy(sBegin, 1, Length(sBegin) - 1) + sEnd;
+        CaretPos := CaretPos - 1;
+      end;
     end;
     vkDelete:
     begin
-      FCode.Text := sBegin + Copy(sEnd, 2);
+      if (Length(sEnd) > 2) and sEnd.StartsWith(sLineBreak) then
+         FCode.Text := sBegin + Copy(sEnd, 3)
+      else
+        FCode.Text := sBegin + Copy(sEnd, 2);
     end;
     vkReturn:
     begin
@@ -407,7 +418,7 @@ begin
         if sBegin[I] = #13 then
           Break;
       end;
-      
+
       iPosAnterior := 0;
       for I := Length(sBegin) - iPosAtual downto 1 do
       begin
@@ -427,7 +438,7 @@ begin
         if sBegin[I] = #13 then
           Break;
       end;
-      
+
       iPosProximo := 0;
       for I := 1 to Length(sEnd) do
       begin
@@ -435,8 +446,32 @@ begin
         if sEnd[I] = #13 then
           Break;
       end;
-      
+
       CaretPos := CaretPos + iPosProximo + iPosAtual - 1;
+    end;
+    vkHome:
+    begin
+      iPosAtual := 0;
+      for I := Length(sBegin) downto 1 do
+      begin
+        Inc(iPosAtual);
+        if sBegin[I] = #13 then
+          Break;
+      end;
+
+      CaretPos := CaretPos - iPosAtual + 2;
+    end;
+    vkEnd:
+    begin
+      iPosProximo := 0;
+      for I := 1 to Length(sEnd) do
+      begin
+        Inc(iPosProximo);
+        if sEnd[I] = #13 then
+          Break;
+      end;
+
+      CaretPos := CaretPos + iPosProximo - 1;
     end;
   end;
 end;
