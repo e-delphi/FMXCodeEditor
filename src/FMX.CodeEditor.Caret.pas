@@ -81,7 +81,6 @@ end;
 
 procedure TInternalCaret.Resize(LineHeight: Single);
 begin
-  LineHeight := LineHeight + (LineHeight * 0.2);
   if FCaret.Size.Height <> LineHeight then
     FCaret.Size := TSizeF.Create(1, LineHeight);
 end;

@@ -47,6 +47,7 @@ type
   private
     procedure CalcExpression;
     procedure CalcAttribute;
+    procedure CalcSelection;
     procedure CalcPainting;
     procedure CalcCaret;
     procedure CalcSize;
@@ -63,7 +64,7 @@ type
     procedure SetCaretColor(const Value: TAlphaColor);
     procedure SetAutoSize(const Value: Boolean);
     procedure CalcLine;
-    procedure Selection;
+    procedure BackSelection;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -135,6 +136,9 @@ begin
   CaretPos := 0;
   Width    := 200;
   Height   := 100;
+
+  FSelection.Start := 13;
+  FSelection.Length := 5;
 end;
 
 destructor TFMXCodeEditor.Destroy;
@@ -168,6 +172,7 @@ begin
 
   CalcAttribute;
   CalcExpression;
+  CalcSelection;
   CalcPainting;
   CalcLine;
   CalcCaret;
@@ -270,6 +275,25 @@ begin
   end;
 end;
 
+procedure TFMXCodeEditor.CalcSelection;
+var
+  Part: TInternalPart;
+  Attib: TInternalAttribute;
+begin
+  Attib := TInternalAttribute.Create;
+  Attib.Font.Size := FFont.Size;
+  Attib.Font.Family := FFont.Family;
+  Attib.Font.Style := FFont.Style;
+  Attib.Color := TAlphaColorRec.White;
+  FAttributes.Add(Attib);
+
+  Part := TInternalPart.Create;
+  Part.Start := FSelection.Start;
+  Part.Lenght := FSelection.Length;
+  Part.Attribute := Attib;
+  FParts.Add(Part);
+end;
+
 procedure TFMXCodeEditor.CalcPainting;
 var
   Parte: TInternalPart;
@@ -308,17 +332,16 @@ begin
   end;
 end;
 
-procedure TFMXCodeEditor.Selection;
+procedure TFMXCodeEditor.BackSelection;
 var
   r: TRectF;
 begin
-
   // Desenvolver desenho da seleção
-//  FSelection.
+  r := TRectF.Create(0, 0, 8 * FSelection.Length, FLineHeight + 1);
+  r.SetLocation(FLineHeight * 5 + 1, 16);
 
-//  r := TRectF.Create(0,0,18,18);
-//  Canvas.Fill.Color := TAlphaColorRec.Gray;
-//  Canvas.FillRect(r, 1, 1, [TCorner.TopLeft, TCorner.TopRight, TCorner.BottomLeft, TCorner.BottomRight], 0.6);
+  Canvas.Fill.Color := TAlphaColorRec.Blue;
+  Canvas.FillRect(r, 1, 1, [TCorner.TopLeft, TCorner.TopRight, TCorner.BottomLeft, TCorner.BottomRight], 1);
 end;
 
 procedure TFMXCodeEditor.Paint;
@@ -330,10 +353,11 @@ begin
     Canvas.Fill.Kind := TBrushKind.Solid;
     Canvas.FillRect(TRectF.Create(0, 0, Width, Height), 0, 0, [], 1);
 
+    // Cor de fundo da seleção
+    BackSelection;
+
     // Texto
     FLayout.RenderLayout(Canvas);
-
-    Selection;
   finally
     Canvas.EndScene;
   end;
